@@ -1,0 +1,10 @@
+[2025-09-11 19:11:05,295][INFO] ============================================================
+[2025-09-11 19:11:05,296][INFO] Composition Training - FINAL FIXED VERSION
+[2025-09-11 19:11:05,296][INFO] Model: 1L-1H-120D
+[2025-09-11 19:11:05,296][INFO] Data: data/simple_graph/standardized_alpine_90_seed42
+[2025-09-11 19:11:05,296][INFO] Train file: train_0.bin
+[2025-09-11 19:11:05,296][INFO] Output dir: out/composition_d120_0mix_20250911_191105
+[2025-09-11 19:11:05,296][INFO] ============================================================
+[2025-09-11 19:11:05,300][INFO] Vocab size: 92, Block size: 32
+[2025-09-11 19:11:05,900][INFO] Model initialized: 0.19M parameters
+[2025-09-11 19:11:05,901][INFO] Starting training...
