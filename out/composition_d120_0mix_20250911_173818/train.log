@@ -1,0 +1,13 @@
+[2025-09-11 17:38:18,342][INFO] ============================================================
+[2025-09-11 17:38:18,342][INFO] Starting Composition Training
+[2025-09-11 17:38:18,342][INFO] Arguments: {'data_dir': 'data/simple_graph/standardized_alpine_90_seed42', 'train_file': 'train_0.bin', 'n_layer': 1, 'n_head': 1, 'n_embd': 120, 'max_iters': 50000, 'learning_rate': 0.0005, 'batch_size': 1024, 'eval_interval': 1000, 'checkpoint_interval': 5000, 'device': 'cuda:0', 'seed': 42}
+[2025-09-11 17:38:18,342][INFO] Output directory: out/composition_d120_0mix_20250911_173818
+[2025-09-11 17:38:18,342][INFO] ============================================================
+[2025-09-11 17:38:18,346][INFO] Vocab size: 92, Block size: 32
+[2025-09-11 17:38:18,346][INFO] Train data size: 330000, Val data size: 4950
+[2025-09-11 17:38:18,957][INFO] Model initialized: 0.19M parameters
+[2025-09-11 17:38:18,974][INFO] Batch test successful: X shape=torch.Size([1024, 32]), Y shape=torch.Size([1024, 32])
+[2025-09-11 17:38:19,380][INFO] Forward pass test successful: loss=4.5637
+[2025-09-11 17:38:19,380][INFO] 
+Starting training...
+[2025-09-11 17:38:21,482][INFO] iter:0 | loss(train):nan | loss(val):4.5814 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%

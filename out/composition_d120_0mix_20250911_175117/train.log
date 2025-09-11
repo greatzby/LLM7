@@ -1,0 +1,10 @@
+[2025-09-11 17:51:17,434][INFO] ============================================================
+[2025-09-11 17:51:17,434][INFO] Starting Composition Training
+[2025-09-11 17:51:17,434][INFO] Arguments: {'data_dir': 'data/simple_graph/standardized_alpine_90_seed42', 'train_file': 'train_0.bin', 'n_layer': 1, 'n_head': 1, 'n_embd': 120, 'max_iters': 50000, 'learning_rate': 0.0005, 'batch_size': 1024, 'eval_interval': 1000, 'checkpoint_interval': 5000, 'device': 'cuda:0', 'seed': 42}
+[2025-09-11 17:51:17,434][INFO] Output directory: out/composition_d120_0mix_20250911_175117
+[2025-09-11 17:51:17,434][INFO] ============================================================
+[2025-09-11 17:51:17,439][INFO] Vocab size: 92, Block size: 32
+[2025-09-11 17:51:18,036][INFO] Model initialized: 0.19M parameters
+[2025-09-11 17:51:18,036][INFO] 
+Starting training...
+[2025-09-11 17:51:20,651][INFO] iter:0 | loss(train):nan | loss(val):4.5832 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%

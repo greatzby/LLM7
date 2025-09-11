@@ -1,0 +1,30 @@
+[2025-09-11 17:54:38,483][INFO] ============================================================
+[2025-09-11 17:54:38,483][INFO] Starting Composition Training
+[2025-09-11 17:54:38,483][INFO] Arguments: {'data_dir': 'data/simple_graph/standardized_alpine_90_seed42', 'train_file': 'train_0.bin', 'n_layer': 1, 'n_head': 1, 'n_embd': 120, 'max_iters': 50000, 'learning_rate': 0.0005, 'batch_size': 1024, 'eval_interval': 1000, 'checkpoint_interval': 5000, 'device': 'cuda:0', 'seed': 42}
+[2025-09-11 17:54:38,483][INFO] Output directory: out/composition_d120_0mix_20250911_175438
+[2025-09-11 17:54:38,483][INFO] ============================================================
+[2025-09-11 17:54:38,487][INFO] Vocab size: 92, Block size: 32
+[2025-09-11 17:54:39,096][INFO] Model initialized: 0.19M parameters
+[2025-09-11 17:54:39,096][INFO] 
+Starting training...
+[2025-09-11 17:54:41,995][INFO] iter:0 | loss(train):nan | loss(val):4.5832 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:55:08,938][INFO] iter:1000 | loss(train):1.8646 | loss(val):0.8453 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:55:35,869][INFO] iter:2000 | loss(train):0.5423 | loss(val):0.9712 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:56:02,848][INFO] iter:3000 | loss(train):0.5289 | loss(val):0.9953 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:56:29,806][INFO] iter:4000 | loss(train):0.5235 | loss(val):1.0503 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:56:56,702][INFO] iter:5000 | loss(train):0.5213 | loss(val):1.0448 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:56:56,709][INFO] Checkpoint saved at iteration 5000
+[2025-09-11 17:57:23,635][INFO] iter:6000 | loss(train):0.5193 | loss(val):1.0512 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:57:50,602][INFO] iter:7000 | loss(train):0.5183 | loss(val):1.0566 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:58:17,559][INFO] iter:8000 | loss(train):0.5172 | loss(val):1.0883 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:58:44,529][INFO] iter:9000 | loss(train):0.5169 | loss(val):1.0717 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:59:11,476][INFO] iter:10000 | loss(train):0.5164 | loss(val):1.0904 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 17:59:11,481][INFO] Checkpoint saved at iteration 10000
+[2025-09-11 17:59:38,427][INFO] iter:11000 | loss(train):0.5157 | loss(val):1.0766 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:00:05,403][INFO] iter:12000 | loss(train):0.5156 | loss(val):1.0969 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:00:32,340][INFO] iter:13000 | loss(train):0.5155 | loss(val):1.0886 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:00:59,319][INFO] iter:14000 | loss(train):0.5152 | loss(val):1.0942 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:01:26,276][INFO] iter:15000 | loss(train):0.5149 | loss(val):1.0913 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:01:26,282][INFO] Checkpoint saved at iteration 15000
+[2025-09-11 18:01:53,242][INFO] iter:16000 | loss(train):0.5150 | loss(val):1.0764 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
+[2025-09-11 18:02:20,222][INFO] iter:17000 | loss(train):0.5148 | loss(val):1.0829 | acc(S2->S3):0.00% | acc(S1->S2):0.00% | acc(S1->S3):0.00%
