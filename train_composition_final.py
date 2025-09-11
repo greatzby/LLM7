@@ -7,7 +7,7 @@ import torch
 import networkx as nx
 from datetime import datetime
 from collections import defaultdict
-
+import random
 # 假设 model.py 和 logger.py 在同一目录下或在Python路径中
 from model import GPTConfig, GPT
 from logger import get_logger
