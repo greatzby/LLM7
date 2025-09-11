@@ -51,7 +51,7 @@ class ModelConfig:
         """加载真实的图结构"""
         # 尝试加载真实的图文件
         graph_paths = [
-            'data/simple_graph/composition_90/composition_graph.graphml',
+            'data/simple_graph/standardized_alpine_90_seed42/composition_graph.graphml',
             'data/simple_graph/composition_graph.graphml',
         ]
         
