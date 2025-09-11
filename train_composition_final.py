@@ -1,4 +1,4 @@
-# train_composition_final.py
+# train_composition_final.py (已进行速度优化)
 import os
 import pickle
 import argparse
@@ -231,8 +231,20 @@ def main():
             
             # 计算训练集和验证集损失
             avg_train_loss = running_loss / loss_count if loss_count > 0 else float('nan')
-            val_losses = [model(X, Y)[1].item() for _ in range(10) for X, Y in [get_batch('val')]]
+            
+            # ####################################################################
+            # ##               ↓↓↓ 性能修复：添加 no_grad ↓↓↓                 ##
+            # ####################################################################
+            val_losses = []
+            with torch.no_grad():
+                for _ in range(10):
+                    X_val, Y_val = get_batch('val')
+                    _, loss = model(X_val, Y_val)
+                    val_losses.append(loss.item())
             avg_val_loss = np.mean(val_losses)
+            # ####################################################################
+            # ##               ↑↑↑ 性能修复：添加 no_grad ↑↑↑                 ##
+            # ####################################################################
             
             # 评估组合推理能力
             results = evaluate_composition(model, test_file, stages, stoi, itos, args.device, G, vocab_size)
