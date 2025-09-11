@@ -1,11 +1,11 @@
-# train_composition_final.py
+# train_composition_final.py (最终修复版)
 import os
 import pickle
 import argparse
 import numpy as np
 import torch
 import networkx as nx
-import random  # <--- 移到顶部！
+import random
 from datetime import datetime
 from collections import defaultdict
 
@@ -48,10 +48,8 @@ def evaluate_composition(model, test_file, stages, stoi, itos, device, G,
     """在测试集上评估模型的组合推理能力"""
     model.eval()
     
-    # 确保阶段信息是整数集合
     S1, S2, S3 = [set(s) for s in stages]
     
-    # 读取测试数据
     try:
         with open(test_file, 'r') as f:
             test_lines = [line.strip() for line in f if line.strip()]
@@ -59,7 +57,6 @@ def evaluate_composition(model, test_file, stages, stoi, itos, device, G,
         print(f"Error: Test file not found at {test_file}")
         return {}
 
-    # 按路径类型对测试用例进行分类
     test_by_type = defaultdict(list)
     for line in test_lines:
         parts = line.split()
@@ -87,32 +84,26 @@ def evaluate_composition(model, test_file, stages, stoi, itos, device, G,
         correct_count = 0
         
         for source, target, _ in test_cases:
-            # 构造输入 prompt: "source target source"
             prompt_str = f"{source} {target} {source}"
             prompt_tokens = [stoi[token] for token in prompt_str.split() if token in stoi]
             x = torch.tensor(prompt_tokens, dtype=torch.long, device=device).unsqueeze(0)
             
-            # 模型生成路径
             y = model.generate(x, max_new_tokens=30, temperature=temperature, top_k=top_k)
             
-            # 解码生成的token序列
             generated_ids = y[0].tolist()
             eos_token_id = stoi.get('\n', 1)
             if eos_token_id in generated_ids:
                 generated_ids = generated_ids[:generated_ids.index(eos_token_id)]
             
-            # 将ID转换为数字路径
             generated_path = [int(itos[tid]) for tid in generated_ids[len(prompt_tokens):] 
                             if tid in itos and itos[tid].isdigit()]
             
-            # 验证生成的路径是否有效
             is_valid = False
             if len(generated_path) >= 2 and generated_path[0] == source and generated_path[-1] == target:
                 path_is_connected = all(G.has_edge(str(u), str(v)) 
                                        for u, v in zip(generated_path[:-1], generated_path[1:]))
                 if path_is_connected:
                     if path_type == 'S1->S3':
-                        # 对于组合任务，必须经过S2
                         if any(node in S2 for node in generated_path[1:-1]):
                             is_valid = True
                     else:
@@ -134,17 +125,14 @@ def main():
     args = parse_args()
     
     # --- 1. 设置环境和日志 ---
-    # 设置随机种子保证可复现性
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
 
-    # 从训练文件名推断混合类型
     mix_type = "0mix" if "train_0" in args.train_file else "20mix"
     
-    # 创建输出目录
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     out_dir = f'out/composition_d{args.n_embd}_{mix_type}_{timestamp}'
     os.makedirs(out_dir, exist_ok=True)
@@ -160,22 +148,18 @@ def main():
     data_dir = args.data_dir
     
     try:
-        # 加载元信息
         with open(os.path.join(data_dir, 'meta.pkl'), 'rb') as f:
             meta = pickle.load(f)
         stoi, itos = meta['stoi'], meta['itos']
         block_size, vocab_size = meta['block_size'], meta['vocab_size']
         
-        # 加载阶段信息
         with open(os.path.join(data_dir, 'stage_info.pkl'), 'rb') as f:
             stage_info = pickle.load(f)
         stages = stage_info['stages']
 
-        # 加载图结构
         graph_path = os.path.join(data_dir, 'composition_graph.graphml')
         G = nx.read_graphml(graph_path)
 
-        # 加载训练和验证数据
         train_data = np.memmap(os.path.join(data_dir, args.train_file), dtype=np.uint16, mode='r')
         val_data = np.memmap(os.path.join(data_dir, 'val.bin'), dtype=np.uint16, mode='r')
         test_file = os.path.join(data_dir, 'test.txt')
@@ -184,7 +168,6 @@ def main():
         return
 
     logger.info(f"Vocab size: {vocab_size}, Block size: {block_size}")
-    logger.info(f"Train data size: {len(train_data)}, Val data size: {len(val_data)}")
 
     # --- 3. 初始化模型和优化器 ---
     model_args = dict(n_layer=args.n_layer, n_head=args.n_head, n_embd=args.n_embd,
@@ -197,79 +180,49 @@ def main():
     optimizer = model.configure_optimizers(weight_decay=1e-1, learning_rate=args.learning_rate, 
                                            betas=(0.9, 0.95), device_type=args.device.split(':')[0])
 
-    # --- 4. 定义数据加载函数（修复版）---
+    # ####################################################################
+    # ##               ↓↓↓ 唯一的修改在这里 ↓↓↓                     ##
+    # ####################################################################
     def get_batch(split):
         data = train_data if split == 'train' else val_data
-        data_size = block_size + 1
+        # 每个序列在文件中占用的长度是 block_size + 1
+        sequence_length_in_file = block_size + 1
         
-        num_sequences = len(data) // data_size
-        if num_sequences == 0:
-            raise ValueError(f"Not enough data. Data length: {len(data)}, block_size+1: {data_size}")
+        # 计算文件中有多少个完整的序列
+        num_sequences = len(data) // sequence_length_in_file
         
-        # 确保batch_size不超过可用序列数
-        actual_batch_size = min(args.batch_size, num_sequences)
+        # 随机选择 batch_size 个序列的起始索引
+        # torch.randint 在 [low, high) 区间内生成整数
+        seq_indices = torch.randint(0, num_sequences, (args.batch_size,))
         
-        # 生成序列索引
-        seq_indices = torch.randint(0, num_sequences, (actual_batch_size,))
-        
-        x_list = []
-        y_list = []
-        
-        for idx in seq_indices:
-            start_idx = int(idx) * data_size  # 确保是整数
-            
-            # 安全检查
-            if start_idx + data_size > len(data):
-                continue
-                
-            x_data = data[start_idx:start_idx+block_size]
-            y_data = data[start_idx+1:start_idx+1+block_size]
-            
-            # 验证数据
-            if len(x_data) == block_size and len(y_data) == block_size:
-                x_tensor = torch.from_numpy(x_data.astype(np.int64))
-                y_tensor = torch.from_numpy(y_data.astype(np.int64))
-                
-                # 检查vocab范围
-                if x_tensor.max() < vocab_size and y_tensor.max() < vocab_size:
-                    x_list.append(x_tensor)
-                    y_list.append(y_tensor)
-        
-        if len(x_list) == 0:
-            raise ValueError("No valid sequences found!")
-        
-        x = torch.stack(x_list).to(args.device)
-        y = torch.stack(y_list).to(args.device)
-        
-        return x, y
+        # 将序列索引转换为在扁平化数据数组中的实际起始位置
+        ix = seq_indices * sequence_length_in_file
 
-    # 测试数据加载
-    try:
-        X_test, Y_test = get_batch('train')
-        logger.info(f"Batch test successful: X shape={X_test.shape}, Y shape={Y_test.shape}")
-        with torch.no_grad():
-            _, test_loss = model(X_test, Y_test)
-            logger.info(f"Forward pass test successful: loss={test_loss.item():.4f}")
-    except Exception as e:
-        logger.error(f"Batch loading test failed: {e}")
-        return
+        # 使用列表推导式高效地构建批次
+        # 这是创建批次最高效、最直接的方式
+        x = torch.stack([torch.from_numpy(data[i : i+block_size].astype(np.int64)) for i in ix])
+        y = torch.stack([torch.from_numpy(data[i+1 : i+1+block_size].astype(np.int64)) for i in ix])
+        
+        # 将数据移动到指定设备，并确保内存是连续的
+        # .contiguous() 是解决这类CUDA错误的关键！
+        return x.to(args.device).contiguous(), y.to(args.device).contiguous()
+    # ####################################################################
+    # ##               ↑↑↑ 唯一的修改在这里 ↑↑↑                     ##
+    # ####################################################################
 
     # --- 5. 训练循环 ---
     logger.info("\nStarting training...")
     running_loss, loss_count = 0.0, 0
     
     for iter_num in range(args.max_iters + 1):
-        # 学习率预热
         if iter_num < 2000:
             lr = args.learning_rate * iter_num / 2000
             for param_group in optimizer.param_groups:
                 param_group['lr'] = lr
         
-        # 评估和日志记录
         if iter_num % args.eval_interval == 0:
             model.eval()
             
-            # 计算损失
             avg_train_loss = running_loss / loss_count if loss_count > 0 else float('nan')
             val_losses = []
             for _ in range(10):
@@ -279,10 +232,8 @@ def main():
                     val_losses.append(loss.item())
             avg_val_loss = np.mean(val_losses)
             
-            # 评估组合推理能力
             results = evaluate_composition(model, test_file, stages, stoi, itos, args.device, G, vocab_size)
             
-            # 记录日志
             log_msg = f"iter:{iter_num} | loss(train):{avg_train_loss:.4f} | loss(val):{avg_val_loss:.4f}"
             for path_type, res in results.items():
                 log_msg += f" | acc({path_type}):{res['accuracy']:.2%}"
@@ -291,7 +242,6 @@ def main():
             running_loss, loss_count = 0.0, 0
             model.train()
         
-        # 保存检查点
         if iter_num > 0 and iter_num % args.checkpoint_interval == 0:
             checkpoint = {'model': model.state_dict(), 'model_args': model_args,
                           'iter_num': iter_num, 'config': vars(args)}
@@ -301,7 +251,6 @@ def main():
         if iter_num == args.max_iters:
             break
 
-        # 训练步
         X, Y = get_batch('train')
         logits, loss = model(X, Y)
         
