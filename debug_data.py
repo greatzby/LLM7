@@ -1,31 +1,57 @@
-# debug_data.py
-import numpy as np
+import os
 import pickle
-import argparse
+import numpy as np
+import torch
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--data_dir', type=str, required=True)
-parser.add_argument('--train_file', type=str, required=True)
-args = parser.parse_args()
+data_dir = 'data/simple_graph/standardized_alpine_90_seed42'
 
-# 加载 meta.pkl 获取预期的 vocab_size
-meta_path = f"{args.data_dir}/meta.pkl"
-with open(meta_path, 'rb') as f:
+# 1. 检查元数据
+with open(os.path.join(data_dir, 'meta.pkl'), 'rb') as f:
     meta = pickle.load(f)
-vocab_size = meta['vocab_size']
-print(f"✅ Meta Info: Expected vocab_size = {vocab_size}")
 
-# 加载 .bin 文件
-data_path = f"{args.data_dir}/{args.train_file}"
-data = np.memmap(data_path, dtype=np.uint16, mode='r')
+print("="*60)
+print("META INFO:")
+print(f"Vocab size: {meta['vocab_size']}")
+print(f"Block size: {meta['block_size']}")
+print(f"Vocab: {list(meta['stoi'].keys())[:20]}...")  # 显示前20个
+print("="*60)
 
-# 查找数据中实际的最大token ID
-max_token_id = data.max()
-print(f"✅ Data Info: Found maximum token ID in {args.train_file} = {max_token_id}")
+# 2. 检查训练数据
+train_data = np.memmap(os.path.join(data_dir, 'train_0.bin'), dtype=np.uint16, mode='r')
+print(f"\nTRAIN DATA INFO:")
+print(f"Shape: {len(train_data)}")
+print(f"Min value: {train_data.min()}")
+print(f"Max value: {train_data.max()}")
+print(f"Unique values: {len(np.unique(train_data[:10000]))}")
 
-# 进行检查
-if max_token_id >= vocab_size:
-    print("\n❌ Mismatch Found! The maximum token ID in the data is out of bounds for the embedding layer.")
-    print(f"   The model expects token IDs from 0 to {vocab_size - 1}, but found a value of {max_token_id}.")
+# 3. 检查是否有超出vocab的值
+if train_data.max() >= meta['vocab_size']:
+    print(f"⚠️ WARNING: Max value {train_data.max()} >= vocab_size {meta['vocab_size']}")
 else:
-    print("\n✅ OK! Data seems consistent with vocab_size.")
+    print(f"✅ All values within vocab range")
+
+# 4. 检查序列结构
+block_size = meta['block_size']
+sequence_length = block_size + 1
+num_sequences = len(train_data) // sequence_length
+
+print(f"\nSEQUENCE INFO:")
+print(f"Sequence length: {sequence_length}")
+print(f"Number of sequences: {num_sequences}")
+print(f"First sequence: {train_data[:sequence_length]}")
+
+# 5. 测试批次生成
+batch_size = 32
+seq_indices = torch.randint(0, num_sequences, (batch_size,))
+print(f"\nBATCH TEST:")
+print(f"Random indices: {seq_indices[:5].tolist()}...")
+
+try:
+    ix = seq_indices * sequence_length
+    x = torch.stack([torch.from_numpy(train_data[i:i+block_size].astype(np.int64)) for i in ix])
+    y = torch.stack([torch.from_numpy(train_data[i+1:i+1+block_size].astype(np.int64)) for i in ix])
+    print(f"✅ Batch creation successful")
+    print(f"X shape: {x.shape}, Y shape: {y.shape}")
+    print(f"X max: {x.max().item()}, X min: {x.min().item()}")
+except Exception as e:
+    print(f"❌ Error in batch creation: {e}")
