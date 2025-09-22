@@ -169,7 +169,7 @@ def main():
     mix_type = "0mix" if "train_0" in args.train_file else ("10mix" if "train_10" in args.train_file else "20mix")
     
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    out_dir = f'out/composition_d{args.n_embd}_{mix_type}_{timestamp}'
+    out_dir = f'out/composition_d{args.n_embd}_{mix_type}_seed{args.seed}_{timestamp}'
     os.makedirs(out_dir, exist_ok=True)
     
     logger = get_logger(os.path.join(out_dir, "train.log"))
