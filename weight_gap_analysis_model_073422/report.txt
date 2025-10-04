@@ -1,0 +1,21 @@
+Weight Gap Analysis Report
+============================================================
+Model: model_073422
+Checkpoint dir: out/unknown_unknown_d92_seed42_20251005_073422
+Generated: 2025-10-05 07:48:55
+
+
+S1->S2:
+  Final gap: 0.6715
+  Min gap:   0.2012
+  Max gap:   0.6715
+
+S2->S3:
+  Final gap: 0.4199
+  Min gap:   0.2104
+  Max gap:   0.4350
+
+S1->S3:
+  Final gap: -0.1454
+  Min gap:   -0.1454
+  Max gap:   0.0080
