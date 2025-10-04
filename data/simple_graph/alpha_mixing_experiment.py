@@ -190,27 +190,43 @@ class AlphaMixingGenerator:
 
     def generate_track_A_dataset(self, alpha: float, dataset_size: int, r: Dict[str, float]) -> List[List[str]]:
         """
-        Track A: final marginal ratios ≈ r for all alpha.
-        - First draw (1-alpha)*N using f_nat (dependent).
-        - Then top up per class independently to hit r (independent).
+        Track A: 对所有 alpha，最终边际比例严格等于 r，样本总数严格等于 dataset_size。
+        实现：先依赖抽样 (1-alpha)*N 按 f_nat；按类对比目标 T=r*N，
+            超配类随机下采样到 T[t]；欠配类再独立补齐到 T[t]。
         """
-        # part 1: dependent
+        # 1) 目标配额（最大余数法，减少取整误差）
+        target_counts = largest_remainder_alloc(r, dataset_size)
+
+        # 2) 依赖部分 (1-alpha)*N 按 f_nat 抽样，按类分别保留，便于后续裁剪/补齐
         n_dep_total = int(round((1 - alpha) * dataset_size))
         n_dep = largest_remainder_alloc(self.f_nat, n_dep_total)
-        dep_records = self._sample_dependent(n_dep)
 
-        # part 2: top up to r
-        target_counts = largest_remainder_alloc(r, dataset_size)
-        cur_counts = self._count_by_type(dep_records)
-        add_records = []
+        dep_by_type = {'12': [], '23': [], '13': []}
         for t in ['12', '23', '13']:
-            need = max(0, target_counts[t] - cur_counts.get(t, 0))
-            if need > 0 and len(self.pool_by_type[t]) > 0:
-                add_records += random.choices(self.pool_by_type[t], k=need)
+            k = n_dep[t]
+            if k > 0 and len(self.pool_by_type[t]) > 0:
+                dep_by_type[t] = random.choices(self.pool_by_type[t], k=k)
 
-        records = dep_records + add_records
-        random.shuffle(records)
-        return self._to_lines(records)
+        # 3) 按目标配额逐类对齐：超配→下采样，欠配→补齐
+        final_records = []
+        for t in ['12', '23', '13']:
+            cur = dep_by_type[t]
+            goal = target_counts[t]
+            if len(cur) > goal:
+                # 随机下采样到目标配额（不放回）
+                cur = random.sample(cur, goal)
+                final_records += cur
+            elif len(cur) < goal:
+                final_records += cur
+                need = goal - len(cur)
+                if need > 0 and len(self.pool_by_type[t]) > 0:
+                    # 补齐用独立采样（可放回 choices 保证足量）
+                    final_records += random.choices(self.pool_by_type[t], k=need)
+            else:
+                final_records += cur
+
+        random.shuffle(final_records)
+        return self._to_lines(final_records)
 
     def generate_track_B_dataset(self, alpha: float, dataset_size: int, r: Dict[str, float]) -> List[List[str]]:
         """
