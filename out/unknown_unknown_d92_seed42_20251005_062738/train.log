@@ -1,0 +1,10 @@
+[2025-10-05 06:27:38,423][INFO] ============================================================
+[2025-10-05 06:27:38,423][INFO] Composition Training - FINAL FIXED VERSION
+[2025-10-05 06:27:38,423][INFO] Model: 1L-1H-92D
+[2025-10-05 06:27:38,423][INFO] Data: data/simple_graph/trackB_0.0_alpine_style
+[2025-10-05 06:27:38,423][INFO] Train file: train.bin
+[2025-10-05 06:27:38,423][INFO] Output dir: out/unknown_unknown_d92_seed42_20251005_062738
+[2025-10-05 06:27:38,423][INFO] ============================================================
+[2025-10-05 06:27:38,428][INFO] Vocab size: 92, Block size: 32
+[2025-10-05 06:27:39,149][INFO] Model initialized: 0.11M parameters
+[2025-10-05 06:27:39,149][INFO] Starting training...
