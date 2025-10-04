@@ -1,0 +1,31 @@
+================================================================================
+TRACK B α=0 WEIGHT GAP ANALYSIS REPORT
+================================================================================
+Generated: 2025-10-05 07:13:42
+Checkpoint directory: out/unknown_unknown_d92_seed42_20251005_070420
+Model: 1 Layer, 1 Head, 92D
+Iterations analyzed: [5000, 10000, 15000, 20000, 25000, 30000, 35000, 40000, 45000, 50000]
+
+
+S1->S2 Analysis:
+----------------------------------------
+Initial gap (5k):  0.1647
+Final gap:         0.5349
+Min gap:           0.1647
+Max gap:           0.5349
+
+S2->S3 Analysis:
+----------------------------------------
+Initial gap (5k):  0.1553
+Final gap:         0.2006
+Min gap:           0.1553
+Max gap:           0.2739
+
+Compositionality Status: ✅ STRONG (always positive)
+
+S1->S3 Analysis:
+----------------------------------------
+Initial gap (5k):  0.0034
+Final gap:         -0.4281
+Min gap:           -0.4281
+Max gap:           0.0034
