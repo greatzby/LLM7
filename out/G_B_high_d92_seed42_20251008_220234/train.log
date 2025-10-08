@@ -1,0 +1,11 @@
+[2025-10-08 22:02:34,603][INFO] ============================================================
+[2025-10-08 22:02:34,603][INFO] Composition Training - Graph Repair Experiment
+[2025-10-08 22:02:34,603][INFO] Experiment: G_B_high
+[2025-10-08 22:02:34,603][INFO] Model: 1L-1H-92D
+[2025-10-08 22:02:34,603][INFO] Data: data/graph_repair_experiment/G_B_high
+[2025-10-08 22:02:34,604][INFO] Train file: train_alpine.bin
+[2025-10-08 22:02:34,604][INFO] Output dir: out/G_B_high_d92_seed42_20251008_220234
+[2025-10-08 22:02:34,604][INFO] ============================================================
+[2025-10-08 22:02:34,611][INFO] Vocab size: 92, Block size: 64
+[2025-10-08 22:02:37,337][INFO] Model initialized: 0.12M parameters
+[2025-10-08 22:02:37,339][INFO] Starting training...
