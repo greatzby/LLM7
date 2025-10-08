@@ -1,0 +1,22 @@
+================================================================================
+GRAPH REPAIR EXPERIMENT SUMMARY
+================================================================================
+
+Experiment Design:
+----------------------------------------
+Base: Original GraphB (pathological)
+A Group: Entry repair only (S1→S2)
+B Group: Exit repair only (S2→S3)
+C Group: Collaborative repair (both)
+
+Edge Statistics:
+----------------------------------------
+Graph           S1→S2    S2→S3    S1→S3    Total
+----------------------------------------
+G_base             53       35        0      289
+G_A_low           113       35        0      349
+G_A_high          203       35        0      439
+G_B_low            53       65        0      319
+G_B_high           53      125        0      379
+G_C_low            83       65        0      349
+G_C_high          113       95        0      409
