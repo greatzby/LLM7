@@ -185,8 +185,8 @@ def calculate_weight_gap(W_M_prime, config, path_type):
     stats['gap'] = stats['edge'] - stats['non_edge']
     return stats
 
-def analyze_single_model(checkpoint_dir, graph_name, iterations=None):
-    """分析单个模型"""
+def analyze_single_model(checkpoint_dir, graph_name, iterations=None, generate_plot=True):
+    """分析单个模型并生成9宫格图"""
     
     print("\n" + "="*80)
     print(f"🔬 Analyzing: {graph_name}")
@@ -235,6 +235,113 @@ def analyze_single_model(checkpoint_dir, graph_name, iterations=None):
                 results[path_type]['gap'].append(np.nan)
     
     print(f"  Analyzed {len(available)} checkpoints: {available}")
+    
+    # ========== 生成9宫格图片 ==========
+    if generate_plot:
+        fig, axes = plt.subplots(3, 3, figsize=(18, 14))
+        fig.suptitle(f'Weight Gap Analysis: {graph_name}', fontsize=16, fontweight='bold')
+        
+        path_types = ['S1->S2', 'S2->S3', 'S1->S3']
+        colors = {'edge': '#2E86AB', 'non_edge': '#A23B72', 'gap': '#F18F01'}
+        
+        for i, path_type in enumerate(path_types):
+            # 第1列：Edge权重
+            ax = axes[i, 0]
+            edge_weights = results[path_type]['edge']
+            valid_iters = [it for it, w in zip(iterations, edge_weights) if not np.isnan(w)]
+            valid_weights = [w for w in edge_weights if not np.isnan(w)]
+            
+            if valid_weights:
+                ax.plot(valid_iters, valid_weights, marker='o', color=colors['edge'],
+                       linewidth=2, markersize=6, alpha=0.8)
+                # 标注最终值
+                ax.annotate(f'{valid_weights[-1]:.3f}', 
+                           xy=(valid_iters[-1], valid_weights[-1]),
+                           xytext=(5, 5), textcoords='offset points',
+                           fontsize=9, color=colors['edge'])
+            
+            ax.set_title('Average Edge Weight' if i == 0 else '', fontsize=12)
+            ax.set_ylabel(f'{path_type}', fontsize=12, fontweight='bold')
+            ax.grid(True, alpha=0.3)
+            ax.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+            
+            # 第2列：Non-edge权重
+            ax = axes[i, 1]
+            non_edge_weights = results[path_type]['non_edge']
+            valid_iters = [it for it, w in zip(iterations, non_edge_weights) if not np.isnan(w)]
+            valid_weights = [w for w in non_edge_weights if not np.isnan(w)]
+            
+            if valid_weights:
+                ax.plot(valid_iters, valid_weights, marker='s', color=colors['non_edge'],
+                       linewidth=2, markersize=6, alpha=0.8, linestyle='--')
+                # 标注最终值
+                ax.annotate(f'{valid_weights[-1]:.3f}', 
+                           xy=(valid_iters[-1], valid_weights[-1]),
+                           xytext=(5, 5), textcoords='offset points',
+                           fontsize=9, color=colors['non_edge'])
+            
+            ax.set_title('Average Non-Edge Weight' if i == 0 else '', fontsize=12)
+            ax.grid(True, alpha=0.3)
+            ax.axhline(y=0, color='gray', linestyle='--', alpha=0.5)
+            
+            # 第3列：Weight Gap
+            ax = axes[i, 2]
+            gaps = results[path_type]['gap']
+            valid_iters = [it for it, g in zip(iterations, gaps) if not np.isnan(g)]
+            valid_gaps = [g for g in gaps if not np.isnan(g)]
+            
+            if valid_gaps:
+                ax.plot(valid_iters, valid_gaps, marker='^', color=colors['gap'],
+                       linewidth=2.5, markersize=7)
+                
+                # 标注最终值
+                final_gap = valid_gaps[-1]
+                ax.annotate(f'{final_gap:.3f}', 
+                          xy=(valid_iters[-1], final_gap),
+                          xytext=(5, 5), textcoords='offset points',
+                          fontsize=10, color=colors['gap'], fontweight='bold')
+                
+                # 填充区域
+                ax.fill_between(valid_iters, 0, valid_gaps, 
+                               where=np.array(valid_gaps) > 0, 
+                               alpha=0.2, color='green', interpolate=True)
+                ax.fill_between(valid_iters, 0, valid_gaps, 
+                               where=np.array(valid_gaps) < 0, 
+                               alpha=0.2, color='red', interpolate=True)
+                
+                # 检查S2->S3的gap
+                if path_type == 'S2->S3':
+                    if min(valid_gaps) > 0:
+                        ax.text(0.95, 0.05, '✅ Always positive', 
+                               transform=ax.transAxes, ha='right', va='bottom',
+                               bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.7))
+                    else:
+                        ax.text(0.95, 0.05, '⚠️ Goes negative', 
+                               transform=ax.transAxes, ha='right', va='bottom',
+                               bbox=dict(boxstyle='round', facecolor='lightcoral', alpha=0.7))
+            
+            ax.set_title('Weight Gap (Edge - Non-Edge)' if i == 0 else '', fontsize=12)
+            ax.grid(True, alpha=0.3)
+            ax.axhline(y=0, color='red', linestyle='--', alpha=0.5)
+        
+        # 设置x轴标签
+        for i in range(3):
+            for j in range(3):
+                axes[i, j].set_xlabel('Training Iterations' if i == 2 else '', fontsize=11)
+                # 设置x轴刻度
+                axes[i, j].set_xticks(iterations[::2] if len(iterations) > 5 else iterations)
+                axes[i, j].set_xticklabels([f'{k//1000}k' for k in (iterations[::2] if len(iterations) > 5 else iterations)])
+        
+        plt.tight_layout(rect=[0, 0, 1, 0.96])
+        
+        # 保存图片
+        save_dir = f'weight_gap_analysis_{graph_name}'
+        os.makedirs(save_dir, exist_ok=True)
+        
+        save_path = os.path.join(save_dir, 'weight_gap_detailed.png')
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        print(f"  ✅ Detailed plot saved to: {save_path}")
+        plt.close()  # 关闭图形，避免内存问题
     
     # 打印最终结果
     for path_type in ['S1->S2', 'S2->S3', 'S1->S3']:
@@ -383,7 +490,7 @@ def plot_comparison(all_results):
     save_path = os.path.join(save_dir, f'comparison_{timestamp}.png')
     plt.savefig(save_path, dpi=150, bbox_inches='tight')
     print(f"\n✅ Comparison plot saved to: {save_path}")
-    plt.show()
+    plt.close()
     
     # 打印总结
     print("\n" + "="*80)
@@ -423,38 +530,8 @@ def main():
         # 分析所有模型
         analyze_all_repair_models()
     elif args.checkpoint_dir and args.graph:
-        # 分析指定的模型
-        results, iterations, config = analyze_single_model(args.checkpoint_dir, args.graph)
-        
-        # 生成单独的图
-        fig, axes = plt.subplots(1, 3, figsize=(15, 5))
-        fig.suptitle(f'Weight Gap Analysis: {args.graph}', fontsize=14, fontweight='bold')
-        
-        path_types = ['S1->S2', 'S2->S3', 'S1->S3']
-        colors = ['#2E86AB', '#F18F01', '#A23B72']
-        
-        for idx, (path_type, color) in enumerate(zip(path_types, colors)):
-            ax = axes[idx]
-            
-            gaps = results[path_type]['gap']
-            valid_idx = ~np.isnan(gaps)
-            
-            if np.any(valid_idx):
-                ax.plot(np.array(iterations)[valid_idx],
-                       np.array(gaps)[valid_idx],
-                       marker='o', color=color, linewidth=2)
-                ax.fill_between(np.array(iterations)[valid_idx],
-                               0, np.array(gaps)[valid_idx],
-                               alpha=0.3, color=color)
-            
-            ax.set_title(path_type)
-            ax.set_xlabel('Iterations')
-            ax.set_ylabel('Weight Gap')
-            ax.grid(True, alpha=0.3)
-            ax.axhline(y=0, color='red', linestyle='--', alpha=0.5)
-        
-        plt.tight_layout()
-        plt.show()
+        # 分析指定的模型并生成9宫格图
+        analyze_single_model(args.checkpoint_dir, args.graph, generate_plot=True)
     else:
         print("Please specify --all or both --graph and --checkpoint_dir")
 
